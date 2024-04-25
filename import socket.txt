@@ -1,0 +1,57 @@
+import socket
+
+def run_server():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ("localhost", 1035)
+    server.bind(server_address)
+    server.listen(1)
+
+    print("Waiting for a connection...")
+
+    connection, client_address = server.accept()
+    print("Connection accepted from:", client_address)
+
+    file_name = "sample.txt"
+    connection.sendall(file_name.encode())
+
+    # Open the file and read its data
+    with open("sample.txt", "r") as file:
+        data = file.read()
+
+    # Send the file data
+    connection.sendall(data.encode())
+
+    print("File sent successfully.")
+
+    connection.close()
+    server.close()
+
+def run_client():
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ("localhost", 1035)
+    client.connect(server_address)
+
+    file_name = client.recv(1024).decode()
+    file_name = "hello" + file_name
+
+    file = open(file_name, "wb")
+    data = client.recv(4096)
+    file.write(data)
+    file.close()
+    client.close()
+
+    print("File received successfully.")
+
+# Run the server and client in the same file
+if _name_ == "_main_":
+    import threading
+
+    # Start the server in a separate thread
+    server_thread = threading.Thread(target=run_server)
+    server_thread.start()
+
+    # Run the client in the main thread
+    run_client()
+
+    # Wait for the server thread to finish
+    server_thread.join()
